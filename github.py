@@ -3,7 +3,7 @@ import configparser
 import logging
 import os
 import sys
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlencode
 
 import requests
 
@@ -18,6 +18,7 @@ config.read(os.path.expanduser('~/.bitbarrc'))
 user = config['roulette'].pop('user')
 token = config['roulette'].pop('token')
 api = config['roulette'].pop('api', 'https://api.github.com/search/issues')
+link = config['roulette'].pop('link', 'https://github.com/issues')
 
 
 class Issue(object):
@@ -37,14 +38,16 @@ class Issue(object):
         return short
 
 
-print(':gun:')
+print(':slot_machine:')
 for title, query in config['roulette'].items():
+    params={'q': query.strip('"').strip("'")}
     print('---')
     result = requests.get(api,
         auth=(user, token),
-        params={'q': query.strip('"').strip("'")}
+        params=params
     ).json()
     print(title,'(',len(result['items']),')', '| refresh=true')
+    print(query, '| alternate=true href={}?{}'.format(link, urlencode(params)))
     for i in sorted(result['items'], key=lambda x: x['html_url']):
         i = Issue(i)
         url = urlparse(i['html_url'])
